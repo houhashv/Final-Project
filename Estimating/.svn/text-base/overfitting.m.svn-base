@@ -1,0 +1,24 @@
+%--------------------------------------------------------------------------
+% Function: overfitting(m, lambda)
+%
+% Determines whether or not the specified model is overfitting based on the
+% supplied maximum allowable max to min weight ratio (lambda).
+%
+% param[in] m: A mixture model.
+% param[in] lambda: The maximum allowable max to min weight ratio.
+% param[out] flag: Whether or not the specified model is overfitting.
+%--------------------------------------------------------------------------
+
+function flag = overfitting(m, lambda)   
+    parms = get(m,'parms');
+    scale = parms.scale;
+    elems = find((max(scale) * (1 / lambda)) > scale);
+
+    % if the model is not overfitting
+    if(length(elems) == 0)
+        flag = 0;        
+    % if the model is overfitting
+    else
+        flag = 1;
+    end
+end

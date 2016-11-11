@@ -1,0 +1,45 @@
+%--------------------------------------------------------------------------
+% Function: cluster_grasps(m, micl, train_pts, valid_pts, nsteps, nattempts)
+%
+% Learns the parameters of the supplied mixture model m using the samples
+% in train_pts. The EM algorithm is used to set the parameters and weights
+% of each component distribution in m. The EM algorithm is performed 
+% nattempts times (each taking nsteps steps), and the mixture with the
+% best ICL value on the validation set valid_pts is returned.
+%
+% param[in] m: A mixture distribution object.
+% param[in] micl: The icl value for m.
+% param[in] train_pts: A matrix of training samples (each a column vector)
+% param[in] valid_pts: A matrix of validation samples (each a column vector)
+% param[in] nsteps: The number of EM steps performed.
+% param[in] nattempts: The number of times the EM algorithm is performed.
+% param[out] mbest: The best mixture model according to the ICL criterion.
+% param[out] iclbest: The icl value of mbest.
+%--------------------------------------------------------------------------
+
+function [mbest iclbest] = cluster_grasps(m, micl, train_pts, valid1_pts, profile_pts, ...
+										  nsteps, nattempts)
+	mbest = m;
+	iclbest = micl;
+
+	% perform EM nattempts times and take the best one according to ICL
+	tic;
+	steps = m.parms.steps;
+	for j = 1:nattempts
+		mix = initEM(m, train_pts);
+		mix.parms.steps = steps;
+		mix = nstepsEM(mix, nsteps, 0, profile_pts); % take nsteps EM steps
+		steps = mix.parms.steps;
+
+		% evaluate the resulting model using icl
+		mix_icl = icl(mix, valid1_pts);
+
+		if mix_icl < iclbest
+			mbest = mix;
+			iclbest = mix_icl;
+		end
+	end
+	% Make sure to record the full list of steps.
+	mbest.parms.steps = steps;
+	toc
+end

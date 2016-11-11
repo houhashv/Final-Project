@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/symbiotic/!svn/ver/3701/learning/stat/neomixture
+END
+icl.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/symbiotic/!svn/ver/1341/learning/stat/neomixture/icl.m
+END
+.project
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/symbiotic/!svn/ver/1297/learning/stat/neomixture/.project
+END
+optimize_points.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/symbiotic/!svn/ver/1297/learning/stat/neomixture/optimize_points.m
+END
+aic.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/aic.m
+END
+bic.m
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/bic.m
+END
+optimized_points.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/symbiotic/!svn/ver/1298/learning/stat/neomixture/optimized_points.m
+END
+completed_log_likelihood.m
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/symbiotic/!svn/ver/1320/learning/stat/neomixture/completed_log_likelihood.m
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/README.txt
+END
+construct_mixture_model.m
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/symbiotic/!svn/ver/1297/learning/stat/neomixture/construct_mixture_model.m
+END
+log_likelihood.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/log_likelihood.m
+END

@@ -1,0 +1,69 @@
+function self = stepEM(self)
+
+% Take one step of EM
+
+parms = self.parms;
+points = optimized_points(self);
+npoints = size(points, 2);
+
+%%%%%%%%%% Compute MLE of mixture parameters
+
+for i = 1:parms.N
+  % The points should have been saved within each dist during 'initEM'.
+  parms.dists{i} = setparms(parms.dists{i}, parms.prob(i,:));
+end;
+
+%%%%%%%%%% Compute new probs
+
+%disp('STEP');
+%npoints
+
+for i = 1:parms.N
+  % *** Which one is correct?
+  % parms.prob(i, :) = parms.scale(i) * evaluate(parms.dists{i}, points) + 0.001;
+  % parms.prob(i, :) = evaluate(parms.dists{i}, points) + 0.00000000001;
+  parms.prob(i, :) = parms.scale(i) * evaluate(parms.dists{i});
+  %parms.prob(i, :) = parms.scale(i) * evaluate(parms.dists{i}, points); % + 0.0001;
+end;
+
+%parms.prob(:,1:10)
+% Normalize
+%if(sum(sum(isnan(parms.scale))) > 0)
+%  parms.scale
+%  error('NAN appeared in scale');
+%end;
+
+%if(sum(sum(isnan(parms.prob))) > 0)
+%  parms.prob
+%  error('NAN appeared in prob');
+%end;
+
+%tmp = parms.prob;
+%parms.prob = parms.prob ./ ((ones(parms.N, 1)) * sum(parms.prob));
+
+%if(sum(sum(isnan(parms.prob))) > 0)
+%  sum(tmp)
+%  parms.prob
+%  d = parms.dists
+%  for i=1:length(d)
+%    i
+%    dd = d{i}.parms
+%  end;
+%  error('NAN appeared in prob 2');
+%end;
+
+% set parms.prob and parms.scale
+if parms.N == 1
+  parms.prob = ones(1, npoints);
+  parms.scale = 1;
+else
+  parms.prob = parms.prob ./ ((ones(parms.N, 1)) * sum(parms.prob));
+  parms.scale = sum(parms.prob') / npoints;
+end;
+
+%if(sum(sum(isnan(parms.scale))) > 0)
+%  error('NAN appeared in scale 2');
+%end;
+
+%%%%%% Store changes
+self = set(self, 'parms', parms);

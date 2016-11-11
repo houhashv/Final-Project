@@ -1,0 +1,37 @@
+%--------------------------------------------------------------------------
+% Function: composite(varargin)
+%
+% Creates a composite distribution object. If no arguments are supplied a 
+% default composite distribution is created. If a single argument is 
+% supplied and it is of type composite it is returned.
+% 
+% A composite distribution is a collection of other distribution objects.
+% It is assumed that each distribution within the composite is
+% conditionally independent. Thus, the density function of the composite is
+% the product of the densities of each of its constituent distributions.
+%
+% param[in] (optional) varargin: A composite distribution object.
+% param[out] a: A new composite distribution object.
+%--------------------------------------------------------------------------
+
+function a = composite(varargin)
+
+switch nargin % the number of input arguments
+	case 0
+		% if no input arguments, create a default object
+		a.descriptor = 'composite distribution';  
+		a.parms.N = 0;	  % The number of distributions
+		a.parms.dists = {}; % The set of distributions
+		a.parms.ndim = 0;   % The number of dimensions over this pdf
+		a.points = [];
+		a = class(a, 'composite');  
+	case 1
+		% if single argument of class asset, return it
+		if(isa(varargin{1},'composite'))
+			a = varargin{1};
+		else
+			error('composite.composite(): Wrong argument type')
+		end 
+	otherwise
+		error('composite.composite(): Wrong number of input arguments')
+end

@@ -1,0 +1,40 @@
+%--------------------------------------------------------------------------
+% Function: create_composite_mixture(dw1, dw2)
+%
+% Creates a mixture model of composite distribution objects. Each composite
+% has a position component (Gaussian) and an orientation component
+% (Dimroth-Watson or girdle). The sum of dw1 and dw2 determines the number
+% of composites in the mixture model, where dw1 denotes the number of
+% composites that contain a Dimroth-Watson distribution and dw2
+% denotes the number of composites that contain a girdle distribution.
+%
+% param[in] dw1: The number of composites that contain a Dimroth-Watson
+% distribution.
+% param[in] dw2: The number of composites that contain a girdle
+% distribution.
+% param[out] m: A mixture model of composite distributions.
+%--------------------------------------------------------------------------
+
+function m = create_composite_mixture(parms, dw1, dw2)
+	% create a mixture model
+	m = mixture;
+	position_dist = parms.clustering.position_dist;
+
+	% add dw1 composite distributions to the mixture
+	% each composite has a Gaussian and Dimroth-Watson component
+	for i = 1:dw1
+		c = composite;
+		c = adddist(c, position_dist(parms));
+		c = adddist(c, dimrothwatson1('orientation'));
+		m = adddist(m, c);
+	end
+
+	% add dw2 composite distributions to the mixture
+	% each composite has a Gaussian and girdle component
+	for j = 1:dw2
+		c = composite;
+		c = adddist(c, position_dist(parms));
+		c = adddist(c, dimrothwatson2('orientation'));
+		m = adddist(m, c);
+	end
+end

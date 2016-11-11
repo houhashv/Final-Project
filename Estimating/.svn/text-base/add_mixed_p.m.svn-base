@@ -1,0 +1,16 @@
+function mixtures = add_mixed_p(mixtures)
+    [m n] = size(mixtures);
+
+    for i = 1:m
+        for j = 1:n            
+            m = mixtures(i,j).mixture;
+
+            % if m is a mixture model
+            if(isa(m,'mixture'))            
+                mixtures(i,j).mixed_p = 1;                
+            else
+                mixtures(i,j).mixed_p = NaN;
+            end
+        end
+    end
+end

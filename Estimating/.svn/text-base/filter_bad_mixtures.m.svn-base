@@ -1,0 +1,23 @@
+function mixtures = filter_bad_mixtures(mixtures)   
+    [m n] = size(mixtures);
+
+    for i = 1:m
+        for j = 1:n
+            if mixtures(i,j).mixed_p == 1
+                % filter based on number of points in each cluster
+                m = mixtures(i,j).mixture;
+
+                mparms = get(m,'parms');
+                [C,I] = max(mparms.prob);                
+          
+                for k = 1:mparms.N
+                    % if no points belong to the cluster
+                    if isempty(find(I == k))
+                        mixtures(i,j).mixed_p = 0;
+                        break
+                    end
+                end
+            end
+        end
+    end
+end

@@ -1,0 +1,95 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/symbiotic/!svn/ver/3584/learning/stat/neomixture/@mixture
+END
+sample.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/@mixture/sample.m
+END
+resumeEM.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/@mixture/resumeEM.m
+END
+subsasgn.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/symbiotic/!svn/ver/1306/learning/stat/neomixture/@mixture/subsasgn.m
+END
+initEM.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/symbiotic/!svn/ver/3584/learning/stat/neomixture/@mixture/initEM.m
+END
+initEM_expectation.m
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/@mixture/initEM_expectation.m
+END
+set.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/symbiotic/!svn/ver/1306/learning/stat/neomixture/@mixture/set.m
+END
+stepEM.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/symbiotic/!svn/ver/2169/learning/stat/neomixture/@mixture/stepEM.m
+END
+mixture.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/symbiotic/!svn/ver/1333/learning/stat/neomixture/@mixture/mixture.m
+END
+nstepsEM.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/symbiotic/!svn/ver/3581/learning/stat/neomixture/@mixture/nstepsEM.m
+END
+nparms.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/@mixture/nparms.m
+END
+evaluate.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/symbiotic/!svn/ver/1671/learning/stat/neomixture/@mixture/evaluate.m
+END
+max_dist.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/symbiotic/!svn/ver/2169/learning/stat/neomixture/@mixture/max_dist.m
+END
+subsref.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/symbiotic/!svn/ver/1320/learning/stat/neomixture/@mixture/subsref.m
+END
+adddist.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/@mixture/adddist.m
+END
+get.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/symbiotic/!svn/ver/1277/learning/stat/neomixture/@mixture/get.m
+END

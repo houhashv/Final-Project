@@ -1,0 +1,51 @@
+%--------------------------------------------------------------------------
+% Function: gal_preshape(train_pts, valid_pts, nsteps, nattempts, 
+% max_clusters)  
+%
+% Fits a set of mixture models on a training set using the EM algorithm, 
+% and evaluates each mixture on a validation set using the ICL criterion. 
+% Each mixture model consists of a collection of composite distributions 
+% over the position and orientation of the hand. The returned matrix is
+% of size (max_clusters + 1) x (max_clusters + 1). Each element of the 
+% matrix is a structure that stores a mixture model and its corresponding 
+% icl value. The row/column index - 1 is equivalent to the number of 
+% Dimroth-Watson/girdle distributions being used for the orientation
+% components of each composite in the mixture. To access the members of
+% the structure in the ith row and jth column the syntax would be 
+% mixtures(i,j).mixture and mixtures(i,j).icl. 
+%
+% param[in] train_pts: A matrix of hand poses (each a column vector).
+% param[in] valid_pts: A matrix of hand poses (each a column vector).
+% param[in] nsteps: The number of EM steps to be taken for each mixture.
+% param[in] nattempts: The number of restarts used for each mixture.
+% param[in] max_clusters: The maximum number of clusters for each mixture.
+% param[out] mixtures: A matrix of structures.
+%--------------------------------------------------------------------------
+
+function mixtures = gal_preshape(train_pts, valid1_pts, valid2_pts, ...
+                                 nsteps, nattempts, max_clusters)      
+  for dw1 = 0:max_clusters
+    for dw2 = 0:max_clusters
+      if ((dw1 == 0 & dw2 == 0) | (dw1 + dw2 > max_clusters))
+        mixtures(dw1 + 1,dw2 + 1).mixture = NaN;
+        mixtures(dw1 + 1,dw2 + 1).icl = NaN;
+      else
+        disp(['Current model (dw1,dw2): ','(',num2str(dw1),',', ...
+              num2str(dw2),')']);
+        
+        % create a mixture of composite distributions
+        micl = inf;
+        m = create_preshape_mixture(dw1,dw2);        
+        
+        % perform nsteps steps of the EM algorithm nattempts times 
+        % and take the best mixture according to the ICL criterion
+        [mbest, iclbest] = cluster_grasps(m,micl,train_pts,valid1_pts, ...
+                                          nsteps,nattempts);
+        
+        % save the results
+        mixtures(dw1 + 1,dw2 + 1).mixture = mbest;
+        mixtures(dw1 + 1,dw2 + 1).icl = icl(mbest,valid2_pts);
+      end
+    end
+  end
+end

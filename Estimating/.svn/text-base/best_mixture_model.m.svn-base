@@ -1,0 +1,33 @@
+%--------------------------------------------------------------------------
+% Function: best_mixture_model(mixtures)
+%
+% Determines the best mixture model out of a matrix of structures (each of
+% which contains a mixture, a corresponding icl value, and a flag that 
+% denotes whether or not the mixture has too much structure). The best 
+% mixture model is the model with the lowest icl value, and does not have 
+% too much structure. 
+%
+% param[in] mixtures: A matrix of structures.
+% param[out] mbest: The best mixture model.
+% param[out] iclbest: The icl value of the best mixture model.
+%--------------------------------------------------------------------------
+
+function [mbest iclbest count_dw1 count_dw2] = best_mixture_model(mixtures)
+
+iclbest = inf;
+[m n] = size(mixtures);
+
+for i = 1:m
+    for j = 1:n
+        mtemp = mixtures(i,j).mixture;
+        icltemp = mixtures(i,j).icl;
+        mixed_p = mixtures(i,j).mixed_p;
+
+        if ~isnan(mixed_p) & mixed_p & (icltemp < iclbest)
+            iclbest = icltemp;
+            mbest = mtemp;
+            count_dw1 = i - 1;
+            count_dw2 = j - 1;
+        end
+    end
+end

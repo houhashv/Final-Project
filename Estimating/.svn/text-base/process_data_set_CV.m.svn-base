@@ -1,0 +1,163 @@
+%--------------------------------------------------------------------------
+% Function: process_data_set(parms)
+%
+% Performs the grasp affordance learning algorithm.
+%
+% param[out] mixtures: A matrix of structures (each of the form
+% struct.mixture and struct.icl).
+%--------------------------------------------------------------------------
+
+function parms = process_data_set_CV(parms)
+
+  if parms.filtering.on
+    % use local minima in hand speed and finger flexion for determining
+    % grasp events
+    parms.filtering.use_mins = [1, 1];
+  end
+
+  samples_prechosen = isfield(parms.clustering, 'train_pts');
+  if samples_prechosen
+    % Sets already given to use, presumably for paired tests.
+    disp('Samples prechosen.');
+    parms = h2op_apply(parms, false);
+    train_pts = parms.clustering.train_pts;
+    valid1_pts = parms.clustering.valid1_pts;
+    valid2_pts = parms.clustering.valid2_pts;
+    valid3_pts = parms.clustering.valid3_pts;
+  else
+    % Pick new random ones.
+    disp('Loading and picking new samples.');
+    % load the pose of the hand and flexion of the fingers with respect to
+    % the object
+    [pose flexion] = load_manipulation_data(parms.in_file,parms.h2op_file);
+    samp_size = size(pose,2); 
+    %seed randperm
+    rand('seed',1);
+    pose = pose(:,randperm(samp_size));%shuffle the data
+    fold_size = round(samp_size/parms.clustering.nfold);
+    %remove n fold from the data
+    rm_n = parms.clustering.nfold - parms.clustering.ntrainfold;
+    rm_idx = mod((parms.clustering.trial-1)*fold_size : (rm_n+parms.clustering.trial-1)*fold_size-1,samp_size)+1;
+    
+    pose(:,rm_idx)=[];
+    %pose(:,fold_size * (parms.clustering.trial-1)+1 : min(fold_size * parms.clustering.trial,samp_size))=[];
+    
+    parms.subsampling.nsamples = size(pose,2);
+    parms.clustering.ntrain = round(parms.subsampling.nsamples/2);
+    parms.clustering.nvalid = [round(parms.subsampling.nsamples/4) ...
+        parms.subsampling.nsamples-parms.clustering.ntrain-round(parms.subsampling.nsamples/4) 0];
+
+    [train_pts valid1_pts valid2_pts valid3_pts] = construct_sample_sets(parms, pose, flexion);
+  end
+
+  switch parms.clustering.position_dist_name
+  case 'gaussian'
+    % IMPORTANT: Using the inline function in the output MAT file also makes the files way larger (10x or more kind of thing). Another good reason to reference the separate function.
+    % The first one is just a bogus setting because I have saved data sets that expect it here.
+    % I hate mat files. I should switch to some real data format sometime, like something that's readable with a text editor or something sane like that.
+    parms.clustering.position_dist = @() gaussian('position');
+    % Here's the real function used now.
+    parms.clustering.position_dist = @build_gaussian;
+  case 'offsetgaussian'
+    % IMPORTANT: Using the inline function in the output MAT file also makes the files way larger (10x or more kind of thing). Another good reason to reference the separate function.
+    % The first one is just a bogus setting because I have saved data sets that expect it here.
+    % I hate mat files. I should switch to some real data format sometime, like something that's readable with a text editor or something sane like that.
+    parms.clustering.position_dist = @() offsetgaussian('transform');
+    parms.clustering.position_dist = @() build_offset_gaussian(parms.clustering);
+    % Here's the real function used now.
+    parms.clustering.position_dist = @build_offset_gaussian;
+  end
+
+  % TODO Some of these functions haven't been updated to support the data 'views' notion.
+
+  % perform the clustering algorithm
+  switch parms.clustering.mode
+    % position
+    case 0
+      mixtures = gal_position( ...
+        train_pts, ...
+        valid1_pts, ...
+        valid2_pts, ...
+        parms.clustering.nsteps, ...
+        parms.clustering.nattempts, ...
+        parms.clustering.max_clusters);
+
+    % orientation
+    case 1
+      mixtures = gal_orientation( ...
+        train_pts, ...
+        valid1_pts, ...
+        valid2_pts, ...
+        parms.clustering.nsteps, ...
+        parms.clustering.nattempts, ...
+        parms.clustering.max_clusters);
+
+    % position and orientation
+    case 2
+      mixtures = gal_composite( ...
+        train_pts, ...
+        valid1_pts, ...
+        valid2_pts, ...
+        parms.clustering.nsteps, ...
+        parms.clustering.nattempts, ...
+        parms.clustering.max_clusters);
+
+    % brute force algorithm
+    case 3
+      mixtures = gal_brute_force( ...
+        train_pts, ...
+        valid1_pts, ...
+        valid2_pts, ...
+        valid3_pts, ... % for performance profile. TODO Really needed???
+        parms);
+  end
+
+  % Clear out points from dists to avoid giant files. Just store at top level parms.
+  parms.clustering.mixtures = arrayfun(@clear_samples, mixtures);
+  if ~samples_prechosen
+    % TODO Store originals here!!!!!! But right now I've got some incompatible files.
+    parms.clustering.train_pts = train_pts;
+    parms.clustering.valid1_pts = valid1_pts;
+    parms.clustering.valid2_pts = valid2_pts;
+    parms.clustering.valid3_pts = valid3_pts;
+    % parms = h2op_apply(parms, true);
+  end
+end
+
+function dist = build_gaussian(parms)
+  % Set up an offset Gaussian distribution with default offset prior, if requested.
+  dist = gaussian('position');
+end
+
+function dist = build_offset_gaussian(parms)
+  % Set up an offset Gaussian distribution with default offset prior, if requested.
+  dist = offsetgaussian('transform');
+  if nargin && parms.clustering.use_prior
+    [offset_prior_mu offset_prior_cov] = offset_defaults;
+    dist.parms.offset_prior_cov_inverse = inv(offset_prior_cov);
+    dist.parms.offset_prior_mu = offset_prior_mu;
+  end
+end
+
+function mixture_and_icl = clear_samples(mixture_and_icl)
+  % Clear out all the data samples under here.
+  empty_samples = prepare_point_views([]);
+  % Check, because some of the values are NaN.
+  if isa(mixture_and_icl.mixture, 'mixture')
+    mixture_and_icl.mixture.points = empty_samples;
+    mdists = mixture_and_icl.mixture.parms.dists;
+    for md = 1 : length(mdists)
+      mdists{md}.points = empty_samples;
+      if isa(mdists{md}, 'composite')
+        cdists = mdists{md}.parms.dists;
+        for cd = 1 : length(cdists)
+          cdists{cd}.points = empty_samples;
+        end
+        % Bothersome MATLAB copy back.
+        mdists{md}.parms.dists = cdists;
+      end
+    end
+    % Bothersome MATLAB copy back.
+    mixture_and_icl.mixture.parms.dists = mdists;
+  end
+end

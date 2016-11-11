@@ -1,0 +1,39 @@
+%--------------------------------------------------------------------------
+% Function: gal_position(train_pts, valid_pts, nsteps, nattempts, 
+% max_clusters)  
+%
+% Fits a set of mixture models on a training set using the EM algorithm, 
+% and evaluates each mixture on a validation set using the ICL criterion. 
+% Each mixture model consists of a collection of distributions over the 
+% position of the hand. The returned vector is of size max_clusters. Each 
+% element of the vector is a structure that stores a mixture model and
+% its corresponding icl value. To access the members of the ith structure
+% in the vector the syntax would be mixtures(i).mixture and mixtures(i).icl. 
+%
+% param[in] train_pts: A matrix of hand poses (each a column vector).
+% param[in] valid_pts: A matrix of hand poses (each a column vector).
+% param[in] nsteps: The number of EM steps to be taken for each mixture.
+% param[in] nattempts: The number of restarts used for each mixture.
+% param[in] max_clusters: The maximum number of clusters for each mixture.
+% param[out] mixtures: A vector of structures.
+%--------------------------------------------------------------------------
+
+function mixtures = gal_position(train_pts, valid1_pts, valid2_pts, ...
+                                 nsteps, nattempts, max_clusters)
+  for i = 1:max_clusters
+    disp(['Current model (gaussians): ','(',num2str(i),')']);
+    
+    % create a mixture of position (3D gaussian) distributions
+    micl = inf;
+    m = create_position_mixture(i);
+
+    % perform nsteps steps of the EM algorithm nattempts times and
+    % take the best mixture according to the ICL criterion
+    [mbest, iclbest] = cluster_grasps(m,micl,train_pts,valid1_pts,[], ...
+                                      nsteps,nattempts);
+
+    % save the results
+    mixtures(i).mixture = mbest;
+    mixtures(i).icl = icl(mbest,valid2_pts);
+  end
+end

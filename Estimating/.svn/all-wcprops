@@ -1,0 +1,113 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/symbiotic/!svn/ver/3927/robot/exps/graspafford2/Clustering
+END
+gal_preshape.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/gal_preshape.m
+END
+best_mixture_model.m
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/symbiotic/!svn/ver/1329/robot/exps/graspafford2/Clustering/best_mixture_model.m
+END
+filter_bad_mixtures.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/filter_bad_mixtures.m
+END
+create_orientation_mixture.m
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/symbiotic/!svn/ver/3610/robot/exps/graspafford2/Clustering/create_orientation_mixture.m
+END
+add_mixed_p.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/add_mixed_p.m
+END
+overfitting.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/overfitting.m
+END
+cluster_grasps.m
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/symbiotic/!svn/ver/1333/robot/exps/graspafford2/Clustering/cluster_grasps.m
+END
+create_composite_mixture.m
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/symbiotic/!svn/ver/1340/robot/exps/graspafford2/Clustering/create_composite_mixture.m
+END
+process_robo_data_set.m
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/process_robo_data_set.m
+END
+create_position_mixture.m
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/symbiotic/!svn/ver/3610/robot/exps/graspafford2/Clustering/create_position_mixture.m
+END
+create_preshape_mixture.m
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/create_preshape_mixture.m
+END
+process_data_set_CV.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/symbiotic/!svn/ver/3927/robot/exps/graspafford2/Clustering/process_data_set_CV.m
+END
+gal_orientation.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/symbiotic/!svn/ver/3610/robot/exps/graspafford2/Clustering/gal_orientation.m
+END
+process_data_set.m
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/symbiotic/!svn/ver/3585/robot/exps/graspafford2/Clustering/process_data_set.m
+END
+gal_brute_force.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/symbiotic/!svn/ver/3736/robot/exps/graspafford2/Clustering/gal_brute_force.m
+END
+gal_composite.m
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/gal_composite.m
+END
+filter_mixtures.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/symbiotic/!svn/ver/1278/robot/exps/graspafford2/Clustering/filter_mixtures.m
+END
+gal_position.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/symbiotic/!svn/ver/3610/robot/exps/graspafford2/Clustering/gal_position.m
+END

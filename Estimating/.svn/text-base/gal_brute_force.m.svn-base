@@ -1,0 +1,201 @@
+%--------------------------------------------------------------------------
+% Function: gal_brute_force(train_pts, valid_pts, nsteps, nattempts,
+% max_clusters)
+%
+% Fits a set of mixture models on a training set using the EM algorithm,
+% and evaluates each mixture on a validation set using the ICL criterion.
+% Each mixture model consists of a collection of composite distributions
+% over the position and orientation of the hand. The returned matrix is
+% of size (max_clusters + 1) x (max_clusters + 1). Each element of the
+% matrix is a structure that stores a mixture model and its corresponding
+% icl value. The row/column index - 1 is equivalent to the number of
+% Dimroth-Watson/girdle distributions being used for the orientation
+% components of each composite in the mixture. To access the members of
+% the structure in the ith row and jth column the syntax would be
+% mixtures(i,j).mixture and mixtures(i,j).icl.
+%
+% param[in] train_pts: A struct of hand pose length and views.
+% param[in] valid1_pts: Samples for use during EM attempts to keep best cluster.
+% param[in] valid2_pts: Samples for assigning final ICL to best cluster for each configuration.
+% param[in] valid3_pts: Samples for recording completed log likelihood during EM steps.
+% param[in] nsteps: The number of EM steps to be taken for each mixture.
+% param[in] nattempts: The number of restarts used for each mixture.
+% param[in] max_clusters: The maximum number of clusters for each mixture.
+% param[out] mixtures: A matrix of structures.
+%--------------------------------------------------------------------------
+
+function mixtures = gal_brute_force( ...
+  train_pts, valid1_pts, valid2_pts, valid3_pts, parms ...
+)
+
+  % See if we need to add an additional background cluster to scoop up noise
+  % points.
+  if isfield(parms.clustering, 'bgcluster') && parms.clustering.bgcluster.on
+    bgcluster = create_composite_fixed(parms, train_pts, valid1_pts);
+  else
+    bgcluster = [];
+  end
+
+  max_clusters = parms.clustering.max_clusters;
+  old_max_clusters = 0;
+  nattempts = parms.clustering.nattempts;
+  nsteps = parms.clustering.nsteps;
+
+  % Check on the whether we will be growing max clusters as we go.
+  if isfield(parms.clustering, 'max_clusters_grown')
+    max_clusters_grown = parms.clustering.max_clusters_grown;
+    if max_clusters_grown
+      % Note that we probably want to step by more than 1 each time. It is
+      % possible, for example, that 3 does worse than 2 but that 4 does better
+      % than either.
+      if isfield(parms.clustering, 'max_clusters_step')
+        max_clusters_step = parms.clustering.max_clusters_step;
+      else
+        max_clusters_step = max_clusters;
+        parms.clustering.max_clusters_step = max_clusters_step;
+      end
+    end
+  else
+    max_clusters_grown = false;
+  end
+
+  % Loop for growing max clusters.
+  while true
+    for dw1 = 0:max_clusters
+      for dw2 = 0:max_clusters
+
+        if ((dw1 == 0 & dw2 == 0) | (dw1 + dw2 > max_clusters))
+          % TODO If using a background, let that provide the baseline rather
+          % TODO than always defaulting to NaN.
+          mixtures(dw1 + 1,dw2 + 1).mixture = NaN;
+          mixtures(dw1 + 1,dw2 + 1).icl = NaN;
+        else
+          % Skip it if we already have done this one.
+          if dw1 + dw2 <= old_max_clusters
+            continue;
+          end
+
+          % Not previously done. Try it out.
+          disp(['Current model (dw1,dw2): ','(',num2str(dw1),',', ...
+                num2str(dw2),')']);
+
+          % create a mixture of composite distributions
+          micl = inf;
+          m = create_composite_mixture(parms, dw1, dw2);
+          m.parms.icl_complexity_punishment_factor = parms.clustering.icl_complexity_punishment_factor;
+
+          % Add the fixed distribution to the cluster, if requested.
+          if ~isempty(bgcluster)
+            m = adddist(m, bgcluster);
+          end
+
+          % perform nsteps steps of the EM algorithm nattempts times
+          % and take the best mixture according to the ICL criterion
+          [mbest, iclbest] = cluster_grasps( ...
+            m,micl,train_pts,valid1_pts,valid3_pts, nsteps,nattempts ...
+          );
+
+          % TODO Delete this offsets monitoring sometime?
+          if false
+            display_offsets(mbest);
+          end
+
+          %if isempty(mbest.parms.prob)%bail out when this happens:by Di
+          %    mixtures(dw1 + 1,dw2 + 1).mixture = NaN;
+          %    mixtures(dw1 + 1,dw2 + 1).icl = NaN;
+          %else    
+          % save the results
+              mixtures(dw1 + 1, dw2 + 1).mixture = mbest;
+              mixtures(dw1 + 1, dw2 + 1).icl = icl(mbest, valid2_pts);
+          %end
+        end
+      end
+    end
+    
+    % Check for growth.
+    if max_clusters_grown
+      % See how many the best used. The best is based on valid2_pts. That's
+      % probably okay.
+      [~, best_ind] = min([mixtures.icl]);
+      [dw1, dw2] = ind2sub(size(mixtures), best_ind);
+      total_used = sum([dw1 dw2] - 1);
+      % See if that includes any from the latest round.
+      if total_used > old_max_clusters
+        % Note that for the starting case of old == 0, this will always happen.
+        % Well, maybe with a background cluster, it might stick to just the
+        % background.
+        old_max_clusters = max_clusters;
+        max_clusters = max_clusters + max_clusters_step;
+        parms.clustering.max_clusters = max_clusters;
+        % Go another round.
+        continue;
+      end
+    end
+
+    % We didn't already continue for another round, so get out of here.
+    break;
+  end
+
+end
+
+
+function dist = create_composite_fixed(parms, train_points, valid_points)
+  % Create a fixed composite distribution representing the given points. This is
+  % usable for a "background" distribution to capture points not well
+  % represented by other clusters.
+
+  % Evaluate our options.
+  [bg(1).c, bg(1).icl] = create_composite_fixed_with_orient(parms, @dimrothwatson1, train_points, valid_points);
+  [bg(2).c, bg(2).icl] = create_composite_fixed_with_orient(parms, @dimrothwatson2, train_points, valid_points);
+
+  % Pick the best.
+  [~, i] = min([bg.icl]);
+  c = bg(i).c;
+
+  % Fix the bg parameters.
+  dist = fixeddist(c);
+end
+
+
+function [c, icl] = create_composite_fixed_with_orient(parms, orient, train_points, valid_points)
+  % Create a fixed composite distribution with the given orientation
+  % distribution.
+
+  % Create the composite distribution.
+  c = composite;
+  position_dist = parms.clustering.position_dist;
+  c = adddist(c, position_dist(parms));
+  c = adddist(c, orient('orientation'));
+
+  % Find the parms.
+  c = setparms(c, ones([1 size(train_points,2)]), train_points);
+
+  % Evaluate pseudo-ICL. No mixture, so no CLL. Just use LL.
+  % TODO Extract out the icl logic into a common place?
+  ll = sum(log(evaluate(c, valid_points)));
+  if isfield(parms.clustering, 'icl_complexity_punishment_factor')
+    punishment_factor = parms.clustering.icl_complexity_punishment_factor;
+  else
+    punishment_factor = 1;
+  end
+  icl = -2 * ll + punishment_factor * log(numel(valid_points)) * nparms(c);
+end
+
+
+function display_offsets(m)
+  % Display offset information, just for debugging/monitoring purposes.
+  mparms = m.parms;
+  mdists = mparms.dists;
+  for md = 1 : length(mdists)
+    mdist = mdists{md};
+    cparms = mdist.parms;
+    cdists = cparms.dists;
+    for cd = 1 : length(cdists)
+      cdist = cdists{cd};
+      if isa(cdist, 'offsetgaussian')
+        oparms = cdist.parms;
+        fprintf('offset %s: %s\n', num2str(md), num2str(oparms.offset));
+      end
+    end
+  end
+end

@@ -1,0 +1,28 @@
+%--------------------------------------------------------------------------
+% Function: filter_mixtures(mixtures, lambda)
+% 
+% Filters the specified matrix of structures. Each structure has a .mixture 
+% and .icl field. This function adds a .mixed_p field to each structure. If 
+% mixed_p is 1, then the mixture does not have too much structure. If 
+% is 0, then the mixture has too much structure, and if mixed_p is NaN, the
+% .mixture field is NaN. A mixture has too much structure if the maximum 
+% weight is greater than lambda times the minimum weight. 
+%
+% param[in] mixtures: A matrix of structures.
+% param[in] lambda: The allowable max to min weight ratio.
+% param[out] mixtures: The original set of structures with the .mixed_p
+% field added.
+%--------------------------------------------------------------------------
+
+function mixtures = filter_mixtures(mixtures, lambda)   
+    [m n] = size(mixtures);
+
+    for i = 1:m
+        for j = 1:n
+            if mixtures(i,j).mixed_p == 1
+                m = mixtures(i,j).mixture;
+                mixtures(i,j).mixed_p = ~overfitting(m,lambda);
+            end
+        end
+    end
+end

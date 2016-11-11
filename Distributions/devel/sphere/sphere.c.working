@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <math.h>
+
+//#define PI 3.14159162
+#define PI (acos(-1))
+
+#define Nsteps 100
+
+double f1(double v0, double v1, double v2) {
+  return(sin(v0)/4);
+};
+
+double f2(double v0, double v1, double v2) {
+  return(sin(v0)*sin(v0)*sin(v1));
+};
+
+double integrate(int sw, int vars, double mx0, double mx1, double mx2, int N)
+{
+  int i,j,k;
+  double ret = 0;
+
+  for(i=0; i < N; ++i) {
+    for(j=0; j < N; ++j) {
+      for(k=0; k < N; ++k) {
+	ret += sw?f1(mx0 * i / N,
+		     mx1 * j / N,
+		     mx2 * k / N):f2(mx0 * i / N,
+				     mx1 * j / N,
+				     mx2 * k / N);
+      }
+    }
+  };
+  return(ret * mx0 * mx1 * mx2 / (N*N*N));
+};
+
+     
+main(int argc, char **argv)
+{
+  double out1 = integrate(1, 3, PI, 2*PI, 2*PI, Nsteps);
+  printf("out1 =    \t%lf\n", out1);
+  double out2 = integrate(0, 3, 2*PI, PI, PI, Nsteps);
+  printf("out2 =    \t%lf\n", out2);
+  printf("answer = \t%lf\n", 2 * PI * PI);
+};

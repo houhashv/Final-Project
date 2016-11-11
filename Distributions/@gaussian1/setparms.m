@@ -1,0 +1,70 @@
+function gauss = setparms(gauss, scale, pts)
+% function setparms(gauss, scale, pts)
+%  <pts> = M x N matrix (N points)
+%  <scale> = 1 x N vector  (weights for each point)
+% Given a set of points, compute the ML parameters
+%  for the Gaussian Distribution
+
+if nargin < 2
+  error('gaussian.setparms(): requires 2 parameters');
+end;
+
+if nargin < 3
+	% TODO Retrieve saved points.
+	pts = optimized_points(gauss);
+else
+	pts = optimized_points(gauss, pts);
+end
+
+gauss = gaussian1(gauss);
+
+pts_rows = size(pts,1);
+row_ones = ones(pts_rows,1);
+
+pts_cols = size(pts,2);
+col_ones = ones(1,pts_cols);
+
+scale_sum = sum(scale);
+
+parms = get(gauss, 'parms');
+
+if(parms.ndim > 0 & (pts_rows ~= parms.ndim))
+  % There is a mismatch between the previously-defined dimensionality of
+  % the gaussian and the new one.
+  error(['gaussian::setparms(): this Gaussian is already defined for ', ...
+	 num2str(parms.ndim), ...
+	 ' DOFs']);
+end;
+
+if(scale_sum == 0)
+  % Bail out
+  % disp('gaussian.setparms(): bailing, sum of scale is 0 ...');
+  return;
+end;
+
+wpts = pts .* (row_ones * scale);
+
+mu = sum(wpts') ./ scale_sum;
+p2 = (pts - (mu' * col_ones)) .* (row_ones * scale);
+
+sigma = p2 * p2' ./ scale_sum; 
+detSigma = det(sigma);
+
+if(sum(sum(isnan(sigma))) > 0 | detSigma == 0 | cond(sigma) > 10e+13)
+  % Bail out: there is no good solution (using the original Gaussian as a default)
+  % disp('gaussian.setparms(): bailing because of sigma ...');
+  return;
+end;
+
+[v,d] = eig(sigma);
+
+parms.mu = mu;
+parms.sigma = sigma;
+% parms.cov = inv(cov);
+
+parms.scale = 1/(((2 * pi).^(pts_rows/2))*sqrt(detSigma));
+parms.ndim = pts_rows;
+parms.A = v * sqrt(d);
+parms.sigma_inverse = inv(sigma);
+
+gauss = set(gauss, 'parms', parms);

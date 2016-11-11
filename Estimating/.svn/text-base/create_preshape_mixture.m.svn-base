@@ -1,0 +1,37 @@
+%--------------------------------------------------------------------------
+% Function: create_preshape_mixture(dw1, dw2)
+%
+% Creates a mixture model of composite distribution objects. Each composite
+% has a position component (gaussian) and an orientation component 
+% (Dimroth-Watson or girdle). The sum of dw1 and dw2 determines the number 
+% of composites in the mixture model, where dw1 denotes the number of 
+% composites that contain a Dimroth-Watson distribution and dw2 
+% denotes the number of composites that contain a girdle distribution.
+%
+% param[in] dw1: The number of composites that contain a Dimroth-Watson 
+% distribution.
+% param[in] dw2: The number of composites that contain a girdle
+% distribution.
+% param[out] m: A mixture model of composite distributions.
+%--------------------------------------------------------------------------
+
+function m = create_preshape_mixture(dw1, dw2)
+    % create a mixture model
+    m = mixture;
+    
+    for i = 1:dw1
+        c = composite;
+        c = adddist(c,gaussian,3);
+        c = adddist(c,dimrothwatson1,4);
+        c = adddist(c,gaussian,3);
+        m = adddist(m,c);
+    end
+
+    for j = 1:dw2
+        c = composite;
+        c = adddist(c,gaussian,3);
+        c = adddist(c,dimrothwatson2,4);
+        c = adddist(c,gaussian,3);
+        m = adddist(m,c);
+    end
+end

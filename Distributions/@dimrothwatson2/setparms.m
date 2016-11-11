@@ -1,0 +1,123 @@
+%--------------------------------------------------------------------------
+% Function: setparms(dw2, scale, pts)
+%
+% Updates the parameters of the specified girdle distribution using pts and
+% scale. The scale argument is optional and is the probability that
+% each point in pts belongs to dw2. pts may have an arbitrary number of
+% rows as long as dw2.parms.u1 and dw2.parms.u2 have the same number of 
+% rows (although the girdle distribution is designed for quaternions). 
+% scale should have the same number of columns as pts.
+%
+% param[in] dw2: A girdle distribution object.
+% param[in] pts: An M x N matrix (data set).
+% param[in] scale: A 1 x N vector (weights of each data point in pts).
+% param[out] a: A new girdle distribution object with updated parameters.
+%--------------------------------------------------------------------------
+
+function a = setparms(self, scale, pts)
+    if nargin < 2
+        error('dimrothwatson2.setparms(): Requires 2 parameters');
+    end
+
+	if nargin < 3
+		% Retrieve saved points.
+		pts = optimized_points(self);
+	else
+		pts = optimized_points(self, pts);
+	end
+
+    [m,n] = size(pts);  
+    a = dimrothwatson2(self);
+    parms = get(a,'parms');
+    
+    % if pts does not have the same number of rows as dw2.parms.u1 or
+    % dw2.parms.u2
+    if m ~= size(parms.u1,1) | m ~= size(parms.u2,1)
+        error(['dimrothwatson2.setparms(): ','pts must have the same ', ...
+            'number of rows as dw2.parms.u1 and dw2.parms.u2']);      
+        
+    % if scale does not have the same number as columns as pts   
+    elseif size(scale,2) ~= n
+        error(['dimrothwatson2.setparms(): ', ...
+            'scale must have the same number of columns as pts']);    
+   
+    % if a small number of points belongs to this distribution return to
+    % avoid numerical issues (k could be set to a very large value)
+    elseif sum(isnan(scale)) > 0 | mean(scale) < .01    
+        return;
+    end;    
+       
+    % update the parameters of dw2 and return it
+    [u1,u2] = mle_of_u1_u2(pts,scale);  
+    k = mle_of_k_bar(u1,u2,pts,scale);
+    
+    parms.u1 = u1;
+    parms.u2 = u2;    
+    parms.k = k;
+    parms.ndim = m;
+    a = set(a,'parms',parms);
+end
+
+%--------------------------------------------------------------------------
+% Function: mle_of_u1_u2(X, scale)
+%
+% Calculates the maximum likelyhood estimate of u1 and u2 given the data 
+% set X. X is an M x N matrix where each column of X is a data point.
+%
+% param[in] X: An M x N matrix.
+% param[in] scale: A 1 x N vector (weights of each data point in X).
+% param[out] u1: The maximum likelyhood estimate of u1 given X.
+% param[out] u2: The maximum likelyhood estimate of u2 given X.
+%--------------------------------------------------------------------------
+
+function [u1, u2] = mle_of_u1_u2(X,scale)
+    wpts = X .* (ones(size(X,1),1) * scale);
+    lambda = (wpts * X') / sum(scale);     
+     
+    % Get the eigenvectors and eigenvalues of lambda
+    [V,D] = eig(lambda);
+    
+    % Put the eigenvalues of lambda into a vector
+    d = diag(D);
+
+    % Sort the eigenvalues in descending order
+    [dvals, delems] = sort(d, 'descend');
+
+    % Get the first eigenvector
+    u1 = V(:, delems(1));  
+    
+    % Get the second eigenvector
+    u2 = V(:, delems(2));
+    
+    % Calculate the magnitude of u1
+    mag_u1 = sqrt(sumsqr(u1));
+    
+    % Make u2 orthogonal to u1
+    u2 = u2 - ((u1/mag_u1) * ((u1' * u2)/mag_u1));       
+end
+
+%--------------------------------------------------------------------------
+% Function: mle_of_k_bar(u1, u2, X, scale)
+%
+% Calculates the maximum likelihood estimate of k given u and X. X is 
+% assumed to be an M x N matrix where each column of X is a data point.
+%
+% param[in] u1: The u1 parameter of a girdle distribution object.
+% param[in] u2: The u2 parameter of a girdle distribution object.
+% param[in] X: An M x N matrix (data set).
+% param[in] scale: A 1 x N vector (weights of each data point in X). 
+% param[out] k: The maximum likelihood estimate of k.
+%--------------------------------------------------------------------------
+
+function k = mle_of_k_bar(u1, u2, X, scale)
+    XT = X';
+    temp = scale * ((XT * u1).^2 + (XT * u2).^2);
+    rhs = -(sum(temp) / sum(scale)) + 1;    
+
+    % replace 0's in rhs with realmin so log(rhs) will not contain -inf
+    elems = find(rhs == 0);
+    rhs(elems) = realmin;
+
+    x = [4.2648   -4.0254    5.2532];
+    k = x(1) - x(2) * log(rhs) .* log(x(3) * (rhs));
+end
